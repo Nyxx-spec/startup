@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="FreshSave — Buy and sell surplus food before it goes to waste." />
+  <title>FreshSave — Reduce Food Waste, Save Money</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body>
+
+  <header>
+    <div class="navbar">
+      <div class="logo"><i class="bi bi-leaf-fill"></i> FreshSave</div>
+      <div class="nav-links">
+        <a onclick="scrollToId('features')">Features</a>
+        <a onclick="scrollToId('how')">How It Works</a>
+        <a onclick="scrollToId('deals')">Today's Deals</a>
+      </div>
+      <div class="nav-btns" id="nav-btns">
+        <button class="btn btn-outline" onclick="goLogin()">Log In</button>
+        <button class="btn btn-green" onclick="goSignup()">Sign Up Free</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-badge"><i class="bi bi-globe-americas"></i> Reduce Food Waste &middot; Save Money &middot; Help the
+      Planet</div>
+    <h1>Buy &amp; Sell <span>Surplus Food</span><br />Before It Goes to Waste</h1>
+    <p>Local restaurants, bakeries and supermarkets list unsold food at up to 70% off — reserve online, pick up before
+      closing.</p>
+    <div class="hero-btns">
+      <button class="btn btn-amber btn-lg" onclick="goBrowse()"><i class="bi bi-bag-heart-fill"></i> Browse Today's
+        Deals</button>
+      <button class="btn btn-green btn-lg" onclick="goSignup()"><i class="bi bi-shop"></i> Start Selling
+        Surplus</button>
+    </div>
+  </section>
+
+  <div class="impact-bar">
+    <div class="impact-inner">
+      <div>
+        <div class="impact-num" id="stat-meals">—</div>
+        <div class="impact-label"><i class="bi bi-egg-fried"></i> Meals Saved</div>
+      </div>
+      <div>
+        <div class="impact-num" id="stat-users">—</div>
+        <div class="impact-label"><i class="bi bi-people-fill"></i> Happy Users</div>
+      </div>
+      <div>
+        <div class="impact-num" id="stat-co2">—</div>
+        <div class="impact-label"><i class="bi bi-flower1"></i> CO&sup2; Reduced</div>
+      </div>
+      <div>
+        <div class="impact-num" id="stat-savings">—</div>
+        <div class="impact-label"><i class="bi bi-cash-coin"></i> Buyer Savings</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="split" id="features" style="margin-top:48px">
+    <div class="panel panel-buy">
+      <div class="panel-icon"><i class="bi bi-bag-heart-fill"></i></div>
+      <h2>For Buyers</h2>
+      <p>Find freshly made food from local businesses at up to 70% off — same quality, better price.</p>
+      <ul>
+        <li><i class="bi bi-check-circle-fill" style="color:var(--green)"></i> Deals from nearby restaurants &amp;
+          bakeries</li>
+        <li><i class="bi bi-check-circle-fill" style="color:var(--green)"></i> Up to 70% off original prices</li>
+        <li><i class="bi bi-check-circle-fill" style="color:var(--green)"></i> Reserve online, pick up in-store</li>
+        <li><i class="bi bi-check-circle-fill" style="color:var(--green)"></i> New deals every afternoon</li>
+      </ul>
+      <button class="btn btn-amber btn-lg" style="width:100%" onclick="goBrowse()">Browse Deals Now <i
+          class="bi bi-arrow-right"></i></button>
+    </div>
+    <div class="panel panel-sell">
+      <div class="panel-icon"><i class="bi bi-shop"></i></div>
+      <h2>For Sellers</h2>
+      <p>Turn unsold food into revenue instead of waste. List in under 2 minutes.</p>
+      <ul>
+        <li><i class="bi bi-check-circle-fill" style="color:var(--green)"></i> Free to list — no upfront fees</li>
+        <li><i class="bi bi-check-circle-fill" style="color:var(--green)"></i> Set your own discounted price</li>
+        <li><i class="bi bi-check-circle-fill" style="color:var(--green)"></i> Customers pick up before closing</li>
+        <li><i class="bi bi-check-circle-fill" style="color:var(--green)"></i> Recover ingredient costs daily</li>
+      </ul>
+      <button class="btn btn-green btn-lg" style="width:100%" onclick="goSignup()">Register as Seller <i
+          class="bi bi-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <div class="how-section" id="how">
+    <div class="how-inner">
+      <h2>How It Works</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h4>Seller Lists Food</h4>
+          <p>Business posts leftover items with a pickup time and discounted price.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h4>Buyer Finds Deal</h4>
+          <p>Customer browses nearby listings and reserves the item they want.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h4>Reserve Online</h4>
+          <p>Buyer claims the item from the platform before heading to the store.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <h4>Pick Up &amp; Enjoy</h4>
+          <p>Customer collects the food before closing. Zero waste, everyone wins.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="listings-section" id="deals">
+    <h2>Today's Featured Deals</h2>
+    <p>Live listings from verified local businesses — updated daily.</p>
+    <div class="cards-grid" id="preview-grid">
+      <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray)">Loading deals…</div>
+    </div>
+    <div style="text-align:center;margin-top:32px">
+      <button class="btn btn-amber btn-lg" onclick="goBrowse()">See All Available Deals <i
+          class="bi bi-arrow-right"></i></button>
+    </div>
+  </section>
+
+  <footer>
+    <div class="logo"><i class="bi bi-leaf-fill"></i> FreshSave</div>
+    <p>Connecting food sellers with buyers to reduce waste — one meal at a time.</p>
+    <p style="margin-top:8px">&copy; 2025 FreshSave &middot; All rights reserved &middot; <a onclick="goLogin()"
+        style="color:inherit">Login</a> &middot; <a onclick="goSignup()" style="color:inherit">Sign Up</a></p>
+  </footer>
+
+  <div id="fs-toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/landing.js"></script>
+</body>
+
+</html>

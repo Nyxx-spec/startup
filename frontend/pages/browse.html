@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FreshSave — Browse Food Deals</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+
+<body>
+
+  <div class="page active admin-page">
+
+    <div class="admin-header" style="background:linear-gradient(135deg,#2D6A4F,#40916C)">
+      <div class="admin-navbar">
+        <div class="admin-logo"><i class="bi bi-leaf-fill"></i> FreshSave</div>
+        <div class="admin-user-info">
+          <span id="browse-greeting" style="opacity:.85;font-size:13px"></span>
+          <span class="badge badge-buyer">BUYER</span>
+          <button class="btn btn-sm"
+            style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)"
+            onclick="doLogout()">
+            <i class="bi bi-box-arrow-right"></i> Log Out
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-layout">
+      <div class="admin-sidebar buyer-nav">
+        <div class="admin-sidebar-section">My Account</div>
+        <div class="admin-nav-item" onclick="goBuyer()"><i class="bi bi-clipboard2-check-fill admin-nav-icon"></i> My Orders</div>
+        <div class="admin-nav-item" onclick="goBuyer()"><i class="bi bi-person-fill admin-nav-icon"></i> Profile</div>
+        <div class="admin-nav-item" onclick="goBuyer()"><i class="bi bi-flag-fill admin-nav-icon"></i> Submit Report</div>
+        <div style="border-top:1px solid var(--border);margin:16px 0"></div>
+        <div class="admin-nav-item active"><i class="bi bi-bag-heart-fill admin-nav-icon"></i> Browse Deals</div>
+        <div style="border-top:1px solid var(--border);margin:16px 0"></div>
+        <div class="admin-nav-item" onclick="doLogout()"><i class="bi bi-box-arrow-right admin-nav-icon"></i> Log Out</div>
+      </div>
+
+      <div class="admin-content">
+        <h2><i class="bi bi-bag-heart-fill" style="color:var(--green)"></i> Today's Food Deals</h2>
+        <p class="section-desc">Fresh listings from verified local businesses — reserve before closing time.</p>
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:24px">
+          <div class="filters" style="margin-bottom:0">
+            <div class="filter-pill active" onclick="filterCards(this,'all')">All</div>
+            <div class="filter-pill" onclick="filterCards(this,'Bakery')"><i class="bi bi-cake2"></i> Bakery</div>
+            <div class="filter-pill" onclick="filterCards(this,'Restaurant')"><i class="bi bi-egg-fried"></i> Restaurant</div>
+            <div class="filter-pill" onclick="filterCards(this,'Café')"><i class="bi bi-cup-hot-fill"></i> Café</div>
+            <div class="filter-pill" onclick="filterCards(this,'Pizzeria')"><i class="bi bi-pie-chart-fill"></i> Pizzeria</div>
+          </div>
+          <input id="search-input" placeholder="Search item or business…" oninput="applyFilters()"
+            style="flex:1;min-width:180px;max-width:280px;font-family:'Poppins',sans-serif;font-size:14px;padding:10px 14px;border:1.5px solid var(--border);border-radius:50px;outline:none;background:var(--bg-input);color:var(--text-main)" />
+          <input type="hidden" id="active-filter" value="all" />
+        </div>
+
+        <div class="cards-grid" id="cards-grid">
+          <div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--gray)">Loading deals…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-payment-section" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center">
+    <div class="modal-box" style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:32px;width:90%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:12px"><i class="bi bi-wallet2" style="color:var(--green)"></i> Select Payment Method</h3>
+      <p style="font-size:13px;color:var(--gray);margin-bottom:20px">How would you like to pay for this reservation?</p>
+      
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">
+        <label style="display:flex;align-items:center;padding:14px 18px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;background:var(--bg-base);transition:border-color .2s">
+          <input type="radio" name="payment-method" value="Cash on Pickup / Pay at Store" checked style="margin-right:12px;accent-color:var(--green)">
+          <div style="flex:1"><div style="font-size:14px;font-weight:600">Cash on Pickup</div><div style="font-size:11px;color:var(--gray)">Pay directly at the store</div></div>
+          <i class="bi bi-cash" style="font-size:20px;color:var(--green)"></i>
+        </label>
+        
+        <label style="display:flex;align-items:center;padding:14px 18px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;background:var(--bg-base);transition:border-color .2s">
+          <input type="radio" name="payment-method" value="GCash" style="margin-right:12px;accent-color:var(--green)">
+          <div style="flex:1"><div style="font-size:14px;font-weight:600">GCash</div><div style="font-size:11px;color:var(--gray)">E-Wallet Transfer</div></div>
+          <i class="bi bi-phone-fill" style="font-size:20px;color:#0052C2"></i>
+        </label>
+        
+        <label style="display:flex;align-items:center;padding:14px 18px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;background:var(--bg-base);transition:border-color .2s">
+          <input type="radio" name="payment-method" value="Maya" style="margin-right:12px;accent-color:var(--green)">
+          <div style="flex:1"><div style="font-size:14px;font-weight:600">Maya</div><div style="font-size:11px;color:var(--gray)">E-Wallet Transfer</div></div>
+          <i class="bi bi-credit-card-fill" style="font-size:20px;color:#10b981"></i>
+        </label>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-outline" onclick="document.getElementById('modal-payment-section').style.display='none'">Cancel</button>
+        <button class="btn btn-green" id="btn-confirm-reserve" onclick="confirmReservation()"><i class="bi bi-check-lg"></i> Confirm Reservation</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="fs-toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/browse.js"></script>
+</body>
+
+</html>

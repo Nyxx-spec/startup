@@ -1,0 +1,236 @@
+// frontend/js/seller.js — Seller dashboard logic
+
+/* ══ ICON MAP ═════════════════════════════════════════════════ */
+var _typeIcons = {
+  'Bakery': '<i class="bi bi-cake2"         style="font-size:2.4rem"></i>',
+  'Restaurant': '<i class="bi bi-egg-fried"      style="font-size:2.4rem"></i>',
+  'Supermarket': '<i class="bi bi-cart4"          style="font-size:2.4rem"></i>',
+  'Café': '<i class="bi bi-cup-hot-fill"   style="font-size:2.4rem"></i>',
+  'Pizzeria': '<i class="bi bi-pie-chart-fill" style="font-size:2.4rem"></i>',
+  'Other': '<i class="bi bi-basket-fill"    style="font-size:2.4rem"></i>'
+};
+
+/* ══ TAB SWITCHER ═════════════════════════════════════════════ */
+function dashTab(section, el) {
+  document.querySelectorAll('.admin-nav-item').forEach(function (i) { i.classList.remove('active'); });
+  document.querySelectorAll('.dash-section').forEach(function (s) { s.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  document.getElementById('dash-' + section).classList.add('active');
+}
+
+/* ══ IMAGE UPLOAD ═════════════════════════════════════════════ */
+var _selectedImageFile = null;
+
+function _validateImageFile(file) {
+  var allowed = ['image/jpeg', 'image/png', 'image/webp'];
+  if (!allowed.includes(file.type)) return 'Only JPG, PNG or WEBP images are allowed.';
+  if (file.size > 5 * 1024 * 1024) return 'Image must be 5 MB or smaller.';
+  return null;
+}
+
+function _applyImageFile(file) {
+  var err = _validateImageFile(file);
+  if (err) { showToast(err); return; }
+  _selectedImageFile = file;
+  var reader = new FileReader();
+  reader.onload = function (e) {
+    document.getElementById('img-preview').src = e.target.result;
+    document.getElementById('img-preview-wrap').style.display = 'block';
+    document.getElementById('img-placeholder').style.display = 'none';
+    document.getElementById('img-filename').textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+  };
+  reader.readAsDataURL(file);
+}
+
+function imgSelected(event) {
+  var file = event.target.files[0];
+  if (file) _applyImageFile(file);
+}
+
+function imgDragOver(event) {
+  event.preventDefault();
+  document.getElementById('img-upload-area').classList.add('drag-over');
+}
+function imgDragLeave(event) {
+  document.getElementById('img-upload-area').classList.remove('drag-over');
+}
+function imgDrop(event) {
+  event.preventDefault();
+  document.getElementById('img-upload-area').classList.remove('drag-over');
+  var file = event.dataTransfer.files[0];
+  if (file) _applyImageFile(file);
+}
+
+function imgRemove() {
+  _selectedImageFile = null;
+  document.getElementById('listing-image').value = '';
+  document.getElementById('img-preview').src = '';
+  document.getElementById('img-preview-wrap').style.display = 'none';
+  document.getElementById('img-placeholder').style.display = '';
+  document.getElementById('img-filename').textContent = '';
+}
+
+function _imageToBase64(file) {
+  return new Promise(function (resolve, reject) {
+    if (!file) { resolve(null); return; }
+    var reader = new FileReader();
+    reader.onload = function (e) { resolve(e.target.result); };
+    reader.onerror = function () { reject(new Error('Failed to read image.')); };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ══ MY LISTINGS ══════════════════════════════════════════════ */
+var _myListings = [];
+
+async function loadMyListings() {
+  try {
+    _myListings = await apiGetMyListings();
+    setEl('my-total', _myListings.length);
+    setEl('my-pending', _myListings.filter(function (l) { return l.status === 'Pending'; }).length);
+    setEl('my-approved', _myListings.filter(function (l) { return l.status === 'Approved'; }).length);
+    setEl('my-rejected', _myListings.filter(function (l) { return l.status === 'Rejected'; }).length);
+    renderMyListings(_myListings);
+  } catch (e) { showToast('Could not load listings: ' + e.message); }
+}
+
+function renderMyListings(listings) {
+  var grid = document.getElementById('my-listings-grid');
+  if (!listings.length) {
+    grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--gray)">No listings yet. Post your first deal above!</div>';
+    return;
+  }
+  var bgs = ['bg1', 'bg2', 'bg3', 'bg4', 'bg5', 'bg6'];
+  var sColors = { Pending: '#B45309', Approved: 'var(--green)', Rejected: 'var(--red)' };
+  var sBgs = { Pending: '#FEF9EE', Approved: '#E8F5EE', Rejected: '#FEF0EC' };
+  var sIcons = {
+    Pending: '<i class="bi bi-hourglass-split"></i>',
+    Approved: '<i class="bi bi-check-circle-fill"></i>',
+    Rejected: '<i class="bi bi-x-circle-fill"></i>'
+  };
+
+  grid.innerHTML = listings.map(function (l, idx) {
+    var st = l.status || 'Pending';
+    var sc = sColors[st] || 'var(--gray)';
+    var sb = sBgs[st] || '#F3F4F6';
+    var si = sIcons[st] || '';
+    var pct = l.pct || Math.round((1 - l.disc_price / l.orig_price) * 100) || 0;
+    var icn = _typeIcons[l.type] || _typeIcons['Other'];
+    var bg = bgs[idx % bgs.length];
+
+    var featBadge = l.featured
+      ? '<div style="position:absolute;top:10px;left:10px;background:var(--amber);color:#111;font-size:10px;font-weight:700;padding:3px 9px;border-radius:50px"><i class="bi bi-star-fill"></i> Featured</div>'
+      : '';
+    var pendingNote = st === 'Pending'
+      ? '<div style="font-size:11px;color:#B45309;background:#FEF9EE;padding:6px 10px;border-radius:6px;margin-bottom:8px"><i class="bi bi-hourglass-split"></i> Awaiting admin approval</div>'
+      : '';
+    var rejectedNote = st === 'Rejected'
+      ? '<div style="font-size:11px;color:var(--red);background:#FEF0EC;padding:6px 10px;border-radius:6px;margin-bottom:8px"><i class="bi bi-x-circle-fill"></i> Rejected. Edit and resubmit.</div>'
+      : '';
+
+    // Show uploaded photo if available, otherwise fall back to icon
+    var cardImg = (l.image || l.image_url)
+      ? '<div class="card-img" style="background:#f1f5f9;padding:0;"><img src="' + escHtml(l.image || l.image_url) + '" alt=""/></div>'
+      : '<div class="card-img ' + bg + '">' + icn + '</div>';
+
+    return '<div class="food-card" style="position:relative">'
+      + '<div style="position:absolute;top:10px;right:10px;background:' + sb + ';color:' + sc + ';font-size:10px;font-weight:700;padding:3px 9px;border-radius:50px">' + si + ' ' + st + '</div>'
+      + featBadge
+      + cardImg
+      + '<div class="card-body">'
+      + '<h3 style="font-size:14px">' + escHtml(l.item) + '</h3>'
+      + '<div class="card-vendor"><i class="bi bi-shop"></i> ' + escHtml(l.business) + '</div>'
+      + '<div style="font-size:11px;color:var(--gray);margin-bottom:6px"><i class="bi bi-geo-alt-fill"></i> ' + escHtml(l.location || '—') + '</div>'
+      + '<div class="price-row" style="margin-bottom:10px"><span class="price-new">₱' + l.disc_price + '</span><span class="price-old">₱' + l.orig_price + '</span><span class="discount-badge">-' + pct + '%</span></div>'
+      + pendingNote + rejectedNote
+      + '<div class="action-btns"><button class="btn btn-xs btn-red" onclick="deleteListing(\'' + l.id + '\')"><i class="bi bi-trash3-fill"></i> Remove</button></div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+async function deleteListing(id) {
+  if (!confirm('Remove this listing?')) return;
+  try {
+    await apiDeleteListing(id);
+    showToast('Listing removed.');
+    loadMyListings();
+  } catch (e) { showToast('Error: ' + e.message); }
+}
+
+/* ══ POST LISTING ═════════════════════════════════════════════ */
+async function postListing() {
+  var flds = ['biz-name', 'biz-type', 'item-name', 'orig-price', 'disc-price', 'location'];
+  var vals = {}, errs = [];
+  flds.forEach(function (id) {
+    var el = document.getElementById(id);
+    el.classList.remove('input-error');
+    vals[id] = el.value.trim();
+    if (!vals[id]) { el.classList.add('input-error'); errs.push(id); }
+  });
+  if (errs.length) { showToast('Fill in all highlighted fields.'); document.getElementById(errs[0]).focus(); return; }
+
+  var origP = parseFloat(vals['orig-price']), discP = parseFloat(vals['disc-price']);
+  if (discP >= origP) {
+    document.getElementById('disc-price').classList.add('input-error');
+    showToast('Discounted price must be lower than original.');
+    return;
+  }
+
+  var btn = document.getElementById('post-btn');
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Posting…';
+  btn.disabled = true;
+  btn.style.opacity = '.7';
+
+  try {
+    var imageData = _selectedImageFile ? await _imageToBase64(_selectedImageFile) : null;
+
+    await apiPostListing({
+      item: vals['item-name'],
+      business: vals['biz-name'],
+      type: vals['biz-type'],
+      orig_price: origP,
+      disc_price: discP,
+      location: vals['location'],
+      pickup_time: fmtTime(document.getElementById('pickup-time').value || '20:00'),
+      image: imageData
+    });
+
+    flds.forEach(function (id) { document.getElementById(id).value = ''; });
+    document.getElementById('pickup-time').value = '20:00';
+    document.getElementById('biz-type').selectedIndex = 0;
+    imgRemove();
+
+    showToast('Listing submitted! Pending admin approval.');
+    dashTab('listings', document.querySelector('[onclick*="listings"]'));
+    loadMyListings();
+  } catch (e) { showToast('Error: ' + e.message); }
+
+  btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Post Listing Now';
+  btn.disabled = false;
+  btn.style.opacity = '1';
+}
+
+/* ══ PROFILE ══════════════════════════════════════════════════ */
+function renderProfile() {
+  if (!currentUser) return;
+  setEl('profile-name', currentUser.name);
+  setEl('profile-email', currentUser.email);
+  setEl('profile-status', currentUser.status || 'Pending');
+  setEl('profile-joined', fmtDate(currentUser.joined_at));
+}
+
+/* ══ INIT ═════════════════════════════════════════════════════ */
+(async function () {
+  await loadSession();
+  if (!currentUser) { goLogin(); return; }
+  if (currentUser.role === 'admin') { goAdmin(); return; }
+  if (currentUser.role === 'buyer') { goBuyer(); return; }
+  document.getElementById('seller-greeting').textContent = 'Hi, ' + currentUser.name;
+  if (currentUser.status === 'Pending') {
+    var warn = document.getElementById('pending-warning');
+    if (warn) warn.style.display = 'block';
+  }
+  renderProfile();
+  loadMyListings();
+})();

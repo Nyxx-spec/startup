@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FreshSave — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+<link rel="stylesheet" href="../css/styles.css"/>
+</head>
+<body>
+
+<div id="page-admin" class="page admin-page active">
+  <div class="admin-header">
+    <div class="admin-navbar">
+      <div class="admin-logo"><i class="bi bi-leaf-fill"></i> FreshSave <span style="font-size:12px;font-weight:400;opacity:.65;margin-left:6px">Admin Panel</span></div>
+      <div class="admin-user-info">
+        <span id="admin-greeting" style="opacity:.85;font-size:13px"></span>
+        <span class="badge badge-admin">ADMIN</span>
+        <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)" onclick="doLogout()">
+          <i class="bi bi-box-arrow-right"></i> Log Out
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-layout">
+    <div class="admin-sidebar">
+      <div class="admin-sidebar-section">Overview</div>
+      <div class="admin-nav-item active" onclick="adminTab('dashboard',this)"><i class="bi bi-grid-1x2-fill admin-nav-icon"></i> Dashboard</div>
+
+      <div class="admin-sidebar-section">Food &amp; Deals</div>
+      <div class="admin-nav-item" onclick="adminTab('listings',this)"><i class="bi bi-basket-fill admin-nav-icon"></i> All Listings</div>
+
+      <div class="admin-sidebar-section">Orders</div>
+      <div class="admin-nav-item" onclick="adminTab('reservations',this);clearOrderBadge()">
+        <i class="bi bi-clipboard2-check-fill admin-nav-icon"></i> Orders &amp; Pickup
+        <span id="order-badge" style="display:none;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;margin-left:auto">NEW</span>
+      </div>
+
+      <div class="admin-sidebar-section">More</div>
+      <div class="admin-nav-item" onclick="adminTab('users',this)"><i class="bi bi-people-fill admin-nav-icon"></i> Users</div>
+      <div class="admin-nav-item" onclick="adminTab('sellers',this)"><i class="bi bi-shop admin-nav-icon"></i> Seller Verification</div>
+      <div class="admin-nav-item" onclick="adminTab('reports',this)"><i class="bi bi-flag-fill admin-nav-icon"></i> Reports</div>
+      <div class="admin-nav-item" onclick="adminTab('payments',this)"><i class="bi bi-cash-coin admin-nav-icon"></i> Revenue</div>
+      <div class="admin-nav-item" onclick="adminTab('notifications',this)"><i class="bi bi-bell-fill admin-nav-icon"></i> Notifications</div>
+      <div class="admin-nav-item" onclick="adminTab('security',this)"><i class="bi bi-shield-lock-fill admin-nav-icon"></i> Security Log</div>
+
+      <div style="border-top:1px solid var(--border);margin:16px 0"></div>
+      <div class="admin-nav-item" onclick="goBrowse()"><i class="bi bi-globe admin-nav-icon"></i> View Site</div>
+    </div>
+
+    <div class="admin-content">
+
+      <!-- DASHBOARD -->
+      <div class="admin-section active" id="admin-dashboard">
+        <h2>Dashboard</h2>
+        <p class="section-desc">Live overview of FreshSave activity.</p>
+        <div class="stat-grid">
+          <div class="stat-card stat-blue"><div class="stat-label">Total Users</div><div class="stat-value" id="stat-users">0</div><div class="stat-sub">Registered accounts</div></div>
+          <div class="stat-card stat-green"><div class="stat-label">Active Listings</div><div class="stat-value" id="stat-listings">0</div><div class="stat-sub">Live food deals</div></div>
+          <div class="stat-card stat-amber"><div class="stat-label">Total Orders</div><div class="stat-value" id="stat-reservations">0</div><div class="stat-sub">All reservations</div></div>
+          <div class="stat-card stat-red"><div class="stat-label">Open Reports</div><div class="stat-value" id="stat-open-reports">0</div><div class="stat-sub">Pending complaints</div></div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card stat-green"><div class="stat-label">Total Sellers</div><div class="stat-value" id="stat-sellers">0</div><div class="stat-sub">Seller accounts</div></div>
+          <div class="stat-card stat-amber"><div class="stat-label">Pending Verifications</div><div class="stat-value" id="stat-pending">0</div><div class="stat-sub">Awaiting review</div></div>
+          <div class="stat-card stat-teal"><div class="stat-label">Food Saved</div><div class="stat-value">540 kg</div><div class="stat-sub">This week from waste</div></div>
+          <div class="stat-card stat-purple"><div class="stat-label">Admin Actions</div><div class="stat-value" id="stat-actions">0</div><div class="stat-sub">Logged this session</div></div>
+        </div>
+        <div class="admin-table-wrap">
+          <div class="admin-table-header"><h3>Recently Registered Users</h3></div>
+          <table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Status</th></tr></thead>
+          <tbody id="recent-users-tbody"></tbody></table>
+        </div>
+        <div class="admin-table-wrap">
+          <div class="admin-table-header">
+            <h3>Recent Orders &amp; Reservations</h3>
+            <button class="btn btn-sm btn-admin" onclick="adminTab('reservations',document.querySelector('[onclick*=reservations]'))">View All Orders</button>
+          </div>
+          <table><thead><tr><th>Order ID</th><th>Buyer</th><th>Item</th><th>Business</th><th>Price</th><th>Pickup Status</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="recent-orders-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- LISTINGS -->
+      <div class="admin-section" id="admin-listings">
+        <h2><i class="bi bi-basket-fill" style="color:var(--green)"></i> Food Listings</h2>
+        <p class="section-desc">Approve, feature, edit or remove listings. Only <strong>Approved</strong> listings appear live to buyers.</p>
+        <div class="stat-grid" style="margin-bottom:20px">
+          <div class="stat-card stat-amber"><div class="stat-label">Pending Approval</div><div class="stat-value" id="lst-pending">0</div></div>
+          <div class="stat-card stat-green"><div class="stat-label">Approved &amp; Live</div><div class="stat-value" id="lst-approved">0</div></div>
+          <div class="stat-card stat-red"><div class="stat-label">Rejected</div><div class="stat-value" id="lst-rejected">0</div></div>
+          <div class="stat-card stat-blue"><div class="stat-label">Featured</div><div class="stat-value" id="lst-featured">0</div></div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center">
+          <div class="filter-pill active" onclick="adminFilterListings(this,'all')">All</div>
+          <div class="filter-pill" onclick="adminFilterListings(this,'Pending')"><i class="bi bi-hourglass-split"></i> Pending</div>
+          <div class="filter-pill" onclick="adminFilterListings(this,'Approved')"><i class="bi bi-check-circle-fill"></i> Approved</div>
+          <div class="filter-pill" onclick="adminFilterListings(this,'Rejected')"><i class="bi bi-x-circle-fill"></i> Rejected</div>
+          <div class="filter-pill" onclick="adminFilterListings(this,'featured')"><i class="bi bi-star-fill"></i> Featured</div>
+          <input class="admin-search" id="admin-listing-search" placeholder="Search listings…" oninput="renderAdminListingCards()" style="margin-left:auto"/>
+        </div>
+        <div class="cards-grid" id="admin-listings-grid">
+          <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray)">Loading listings…</div>
+        </div>
+      </div>
+
+      <!-- EDIT LISTING MODAL -->
+      <div id="edit-listing-panel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:center;justify-content:center">
+        <div style="background:#fff;border-radius:20px;padding:36px;width:90%;max-width:540px;box-shadow:0 24px 64px rgba(0,0,0,.22)">
+          <h3 style="font-size:20px;font-weight:700;margin-bottom:22px"><i class="bi bi-pencil-square"></i> Edit Listing</h3>
+          <input type="hidden" id="edit-lid"/>
+          <div class="form-row">
+            <div class="form-group"><label style="font-size:13px;font-weight:600;margin-bottom:5px;display:block">Item Name</label><input id="edit-item" type="text" style="width:100%;font-family:'Poppins',sans-serif;font-size:14px;padding:11px 13px;border:1.5px solid var(--border);border-radius:9px;outline:none"/></div>
+            <div class="form-group"><label style="font-size:13px;font-weight:600;margin-bottom:5px;display:block">Business</label><input id="edit-biz" type="text" style="width:100%;font-family:'Poppins',sans-serif;font-size:14px;padding:11px 13px;border:1.5px solid var(--border);border-radius:9px;outline:none"/></div>
+          </div>
+          <div class="form-row" style="margin-top:12px">
+            <div class="form-group"><label style="font-size:13px;font-weight:600;margin-bottom:5px;display:block">Original Price (&#8369;)</label><input id="edit-orig" type="number" style="width:100%;font-family:'Poppins',sans-serif;font-size:14px;padding:11px 13px;border:1.5px solid var(--border);border-radius:9px;outline:none"/></div>
+            <div class="form-group"><label style="font-size:13px;font-weight:600;margin-bottom:5px;display:block">Discounted Price (&#8369;)</label><input id="edit-disc" type="number" style="width:100%;font-family:'Poppins',sans-serif;font-size:14px;padding:11px 13px;border:1.5px solid var(--border);border-radius:9px;outline:none"/></div>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px">
+            <button class="btn btn-outline btn-sm" onclick="closeEditListing()">Cancel</button>
+            <button class="btn btn-green btn-sm" onclick="saveEditListing()"><i class="bi bi-check-lg"></i> Save Changes</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ORDERS -->
+      <div class="admin-section" id="admin-reservations">
+        <h2><i class="bi bi-clipboard2-check-fill" style="color:var(--green)"></i> Orders &amp; Reservations</h2>
+        <p class="section-desc">Track every order, view pickup status, cancel orders, handle disputes and issue refunds.</p>
+        <div class="stat-grid" style="margin-bottom:20px">
+          <div class="stat-card stat-green"><div class="stat-label">Total Orders</div><div class="stat-value" id="ord-total">0</div></div>
+          <div class="stat-card stat-blue"><div class="stat-label">Picked Up</div><div class="stat-value" id="ord-pickedup">0</div></div>
+          <div class="stat-card stat-amber"><div class="stat-label">Awaiting Pickup</div><div class="stat-value" id="ord-pending">0</div></div>
+          <div class="stat-card stat-red"><div class="stat-label">Cancelled</div><div class="stat-value" id="ord-cancelled">0</div></div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center">
+          <div class="filter-pill active" onclick="adminFilterOrders(this,'all')">All</div>
+          <div class="filter-pill" onclick="adminFilterOrders(this,'Reserved')"><i class="bi bi-hourglass-split"></i> Reserved</div>
+          <div class="filter-pill" onclick="adminFilterOrders(this,'Picked Up')"><i class="bi bi-check-circle-fill"></i> Picked Up</div>
+          <div class="filter-pill" onclick="adminFilterOrders(this,'Disputed')"><i class="bi bi-exclamation-triangle-fill"></i> Disputed</div>
+          <div class="filter-pill" onclick="adminFilterOrders(this,'Cancelled')"><i class="bi bi-x-circle-fill"></i> Cancelled</div>
+          <div class="filter-pill" onclick="adminFilterOrders(this,'Refunded')"><i class="bi bi-cash-stack"></i> Refunded</div>
+          <input class="admin-search" id="admin-order-search" placeholder="Search buyer or item…" oninput="renderAdminOrderCards()" style="margin-left:auto"/>
+        </div>
+        <div id="admin-orders-grid" style="display:flex;flex-direction:column;gap:14px">
+          <div style="text-align:center;padding:40px;color:var(--gray)">Loading orders…</div>
+        </div>
+      </div>
+
+      <!-- USERS -->
+      <div class="admin-section" id="admin-users">
+        <h2><i class="bi bi-people-fill" style="color:var(--green)"></i> User Management</h2>
+        <p class="section-desc">View all users, edit info, reset passwords, suspend/ban accounts.</p>
+        <div class="admin-table-wrap">
+          <div class="admin-table-header">
+            <h3>All Users</h3>
+            <div class="admin-table-actions">
+              <select class="admin-select" id="user-role-filter" onchange="renderUsersTable()">
+                <option value="">All Roles</option><option value="admin">Admin</option><option value="seller">Seller</option><option value="buyer">Buyer</option>
+              </select>
+              <select class="admin-select" id="user-status-filter" onchange="renderUsersTable()">
+                <option value="">All Status</option><option value="Active">Active</option><option value="Suspended">Suspended</option>
+              </select>
+              <input class="admin-search" id="user-search" placeholder="Search name or email…" oninput="renderUsersTable()"/>
+            </div>
+          </div>
+          <table><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Orders</th><th>Joined</th><th>Actions</th></tr></thead>
+          <tbody id="users-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- EDIT USER PANEL -->
+      <div id="edit-user-panel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center">
+        <div style="background:#fff;border-radius:16px;padding:32px;width:90%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+          <h3 style="font-size:18px;font-weight:700;margin-bottom:20px"><i class="bi bi-pencil-square"></i> Edit User</h3>
+          <input type="hidden" id="edit-uid"/>
+          <div class="form-group" style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;display:block;margin-bottom:5px">Full Name</label><input id="edit-name" type="text" style="width:100%;font-family:'Poppins',sans-serif;font-size:14px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;outline:none"/></div>
+          <div class="form-group" style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;display:block;margin-bottom:5px">Email</label><input id="edit-email" type="email" style="width:100%;font-family:'Poppins',sans-serif;font-size:14px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;outline:none"/></div>
+          <div class="form-group" style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;display:block;margin-bottom:5px">Role</label>
+            <select id="edit-role" style="width:100%;font-family:'Poppins',sans-serif;font-size:14px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;outline:none">
+              <option value="buyer">Buyer</option><option value="seller">Seller</option><option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:20px"><label style="font-size:13px;font-weight:600;display:block;margin-bottom:5px">Reset Password (leave blank to keep)</label><input id="edit-pass" type="password" placeholder="New password…" style="width:100%;font-family:'Poppins',sans-serif;font-size:14px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;outline:none"/></div>
+          <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button class="btn btn-outline btn-sm" onclick="closeEditUser()">Cancel</button>
+            <button class="btn btn-green btn-sm" onclick="saveEditUser()"><i class="bi bi-check-lg"></i> Save Changes</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SELLER VERIFICATION -->
+      <div class="admin-section" id="admin-sellers">
+        <h2><i class="bi bi-shop" style="color:var(--green)"></i> Seller Verification</h2>
+        <p class="section-desc">Review seller applications, verify business permits, approve or reject registrations.</p>
+        <div class="admin-warning"><i class="bi bi-exclamation-triangle-fill"></i> Always verify a seller's business permit before approving.</div>
+        <div class="admin-table-wrap">
+          <div class="admin-table-header">
+            <h3>Seller Applications</h3>
+            <select class="admin-select" id="seller-status-filter" onchange="renderSellersTable()">
+              <option value="">All Status</option><option value="Pending">Pending</option><option value="Verified">Verified</option><option value="Suspended">Suspended</option>
+            </select>
+          </div>
+          <table><thead><tr><th>#</th><th>Business Name</th><th>Email</th><th>Type</th><th>Address</th><th>Permit</th><th>Status</th><th>Registered</th><th>Actions</th></tr></thead>
+          <tbody id="sellers-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- REPORTS -->
+      <div class="admin-section" id="admin-reports">
+        <h2><i class="bi bi-flag-fill" style="color:var(--red)"></i> Reports &amp; Complaints</h2>
+        <p class="section-desc">Handle customer complaints, resolve disputes, issue warnings, remove bad sellers.</p>
+        <div class="stat-grid">
+          <div class="stat-card stat-red"><div class="stat-label">Open Reports</div><div class="stat-value" id="rep-open">0</div></div>
+          <div class="stat-card stat-green"><div class="stat-label">Resolved</div><div class="stat-value" id="rep-resolved">0</div></div>
+          <div class="stat-card stat-amber"><div class="stat-label">Warnings Issued</div><div class="stat-value" id="rep-warnings">0</div></div>
+          <div class="stat-card stat-red"><div class="stat-label">Sellers Removed</div><div class="stat-value">2</div></div>
+        </div>
+        <div class="admin-table-wrap">
+          <div class="admin-table-header">
+            <h3>All Reports</h3>
+            <select class="admin-select" id="report-status-filter" onchange="renderReportsTable()">
+              <option value="">All Status</option><option value="Open">Open</option><option value="Warning Issued">Warning Issued</option><option value="Resolved">Resolved</option>
+            </select>
+          </div>
+          <table><thead><tr><th>#</th><th>Report ID</th><th>Reporter</th><th>Against</th><th>Issue</th><th>Details</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="reports-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- PAYMENTS -->
+      <div class="admin-section" id="admin-payments">
+        <h2><i class="bi bi-cash-coin" style="color:var(--green)"></i> Payments &amp; Revenue</h2>
+        <p class="section-desc">View payments, track commission, handle refunds, export financial reports.</p>
+        <div class="stat-grid">
+          <div class="stat-card stat-green"><div class="stat-label">Total Revenue</div><div class="stat-value">&#8369;129K</div></div>
+          <div class="stat-card stat-blue"><div class="stat-label">Commission Earned</div><div class="stat-value">&#8369;12.9K</div></div>
+          <div class="stat-card stat-amber"><div class="stat-label">This Month</div><div class="stat-value">&#8369;22K</div></div>
+          <div class="stat-card stat-red"><div class="stat-label">Refunds Issued</div><div class="stat-value">&#8369;485</div></div>
+        </div>
+        <div class="admin-table-wrap">
+          <div class="admin-table-header">
+            <h3>All Payment Records</h3>
+            <div class="admin-table-actions">
+              <select class="admin-select" id="pay-status-filter" onchange="renderPaymentsTable()">
+                <option value="">All Status</option><option value="Completed">Completed</option><option value="Refunded">Refunded</option><option value="Pending">Pending</option>
+              </select>
+              <button class="btn btn-sm btn-admin" onclick="exportReport()"><i class="bi bi-cloud-download-fill"></i> Export CSV</button>
+            </div>
+          </div>
+          <table><thead><tr><th>Order ID</th><th>Buyer</th><th>Item</th><th>Amount</th><th>Commission</th><th>Method</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody id="payments-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div class="admin-section" id="admin-notifications">
+        <h2><i class="bi bi-bell-fill" style="color:var(--green)"></i> Send Notifications</h2>
+        <p class="section-desc">Broadcast messages to buyers, sellers, or all users.</p>
+        <div class="notif-compose">
+          <h3><i class="bi bi-send-fill"></i> Compose Notification</h3>
+          <div class="form-row" style="max-width:620px;margin-bottom:12px">
+            <div class="form-group">
+              <label style="font-size:13px;font-weight:600;display:block;margin-bottom:5px">Send To</label>
+              <select id="notif-target" style="width:100%;font-family:'Poppins',sans-serif;font-size:14px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;outline:none">
+                <option value="all">All Users</option><option value="buyers">Buyers Only</option><option value="sellers">Sellers Only</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="font-size:13px;font-weight:600;display:block;margin-bottom:5px">Type</label>
+              <select id="notif-type" style="width:100%;font-family:'Poppins',sans-serif;font-size:14px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;outline:none">
+                <option value="deal">Deal Alert</option><option value="promo">Promotion</option><option value="reminder">Reminder</option><option value="system">System</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="max-width:620px;margin-bottom:14px">
+            <label style="font-size:13px;font-weight:600;display:block;margin-bottom:5px">Message</label>
+            <textarea id="notif-msg" placeholder="Type your notification here…" style="width:100%;font-family:'Poppins',sans-serif;font-size:14px;padding:11px 13px;border:1.5px solid var(--border);border-radius:8px;outline:none;min-height:90px;resize:vertical"></textarea>
+          </div>
+          <button class="btn btn-green" onclick="sendNotification()"><i class="bi bi-send-fill"></i> Send Notification</button>
+        </div>
+        <div class="admin-table-wrap" style="padding:20px">
+          <h3 style="font-size:15px;font-weight:700;margin-bottom:14px">Sent History</h3>
+          <div class="notif-list" id="notif-list"></div>
+        </div>
+      </div>
+
+      <!-- SECURITY LOG -->
+      <div class="admin-section" id="admin-security">
+        <h2><i class="bi bi-shield-lock-fill" style="color:var(--green)"></i> Security &amp; Activity Log</h2>
+        <p class="section-desc">Every admin action is automatically recorded here.</p>
+        <div class="admin-table-wrap">
+          <div class="admin-table-header">
+            <h3>Activity Log</h3>
+            <div class="admin-table-actions">
+              <select class="admin-select" id="log-type-filter" onchange="renderSecurityLog()">
+                <option value="">All Types</option><option value="green">Success</option><option value="red">Alert</option><option value="amber">Warning</option><option value="blue">Info</option>
+              </select>
+              <button class="btn btn-sm btn-admin" onclick="exportLog()"><i class="bi bi-cloud-download-fill"></i> Export Log</button>
+            </div>
+          </div>
+          <div id="security-log-list" style="max-height:480px;overflow-y:auto"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <div class="modal-overlay" id="modal-verify-seller">
+    <div class="modal-box verify-modal">
+      <h3><i class="bi bi-search"></i> Review Seller Application</h3>
+      <div id="verify-seller-info" style="margin:16px 0"></div>
+      <div class="modal-btns">
+        <button class="btn btn-outline" onclick="closeVerifyModal()">Close</button>
+        <button class="btn btn-red"     onclick="actOnSeller('Suspended')"><i class="bi bi-x-circle-fill"></i> Reject &amp; Suspend</button>
+        <button class="btn btn-green"   onclick="actOnSeller('Verified')"><i class="bi bi-check-circle-fill"></i> Verify &amp; Approve</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-resolve-report">
+    <div class="modal-box">
+      <h3><i class="bi bi-scale"></i> Resolve Report</h3>
+      <p id="resolve-report-msg"></p>
+      <select id="resolve-action" style="width:100%;font-family:'Poppins',sans-serif;font-size:14px;padding:11px 13px;border:1.5px solid var(--border);border-radius:8px;margin-bottom:18px;outline:none">
+        <option value="warn">Issue Warning to Seller</option>
+        <option value="remove">Remove Offending Listing</option>
+        <option value="suspend">Suspend Seller Account</option>
+        <option value="refund">Issue Refund to Buyer</option>
+        <option value="dismiss">Dismiss — No Action</option>
+      </select>
+      <div class="modal-btns">
+        <button class="btn btn-outline" onclick="closeReportModal()">Cancel</button>
+        <button class="btn btn-green"   onclick="resolveReport()"><i class="bi bi-check-lg"></i> Confirm Action</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-dispute">
+    <div class="modal-box">
+      <h3><i class="bi bi-scale"></i> Resolve Dispute</h3>
+      <p id="dispute-msg"></p>
+      <select id="dispute-action" style="width:100%;font-family:'Poppins',sans-serif;font-size:14px;padding:11px 13px;border:1.5px solid var(--border);border-radius:8px;margin-bottom:18px;outline:none">
+        <option value="refund">Issue Full Refund</option>
+        <option value="cancel">Cancel Order (No Refund)</option>
+        <option value="warn">Warn Seller, Keep Order</option>
+        <option value="dismiss">Dismiss — Order Stands</option>
+      </select>
+      <div class="modal-btns">
+        <button class="btn btn-outline" onclick="closeDisputeModal()">Cancel</button>
+        <button class="btn btn-green"   onclick="resolveDispute()"><i class="bi bi-check-lg"></i> Confirm Resolution</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="fs-toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/app.js"></script>
+<script src="../js/admin.js"></script>
+</body>
+</html>
